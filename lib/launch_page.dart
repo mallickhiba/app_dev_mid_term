@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:app_dev_mid_term/launch_model.dart';
 import 'package:http/http.dart' as http;
@@ -73,14 +74,7 @@ class LaunchCard extends StatefulWidget {
 }
 
 class LaunchCardState extends State<LaunchCard> {
-  bool showFull = false;
-
-  void _toggleFull() {
-    setState(() {
-      showFull = !showFull;
-      // print("$showFull  ${widget.launch.missionName}");
-    });
-  }
+  bool showMore = false;
 
   @override
   Widget build(BuildContext context) {
@@ -102,61 +96,39 @@ class LaunchCardState extends State<LaunchCard> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(widget.launch.description ?? ''),
+                Text(
+                  widget.launch.description ?? '',
+                  textAlign: TextAlign.center,
+                  maxLines: showMore ? 100 : 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 Align(
                   alignment: Alignment.centerRight,
                   child: ElevatedButton(
-                    style: ButtonStyle(
-                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18.0),
-                        ),
-                      ),
-                      backgroundColor: const WidgetStatePropertyAll<Color>(
-                          Color(0xFFdcdcdc)),
-                    ),
                     onPressed: () {
-                      _toggleFull();
+                      setState(() {
+                        showMore = !showMore;
+                      });
                     },
-                    child: showFull
-                        ? const Row(mainAxisSize: MainAxisSize.min, children: [
-                            Text(
-                              "Less",
-                              style: TextStyle(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_upward,
-                              color: Colors.blue,
-                            )
-                          ])
-                        : const Row(mainAxisSize: MainAxisSize.min, children: [
-                            Text("More",
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
-                                )),
-                            Icon(
-                              Icons.arrow_downward,
-                              color: Colors.blue,
-                            )
-                          ]),
+                    child: Text(showMore ? "Less" : "More"),
                   ),
                 ),
-                // Align(
-                //   alignment: Alignment.center,
-                //   child: ListView.builder(
-                //     itemCount: widget.launch.payloadIds?.length,
-                //     itemBuilder: (context, index) {
-                //       String payloadId = widget.launch.payloadIds![index];
-                //       return Chip(
-                //         label: Text(payloadId),
-                //       );
-                //     },
-                //   ),
-                // ),
+                Wrap(
+                  children: widget.launch.payloadIds!
+                      .map(
+                        (payload) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 5),
+                            child: Chip(
+                                label: Text(payload,
+                                    style:
+                                        const TextStyle(color: Colors.black)),
+                                backgroundColor: Colors.primaries[
+                                    Random().nextInt(Colors.primaries.length)],
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(150)))),
+                      )
+                      .toList(),
+                )
               ]),
         ));
   }
