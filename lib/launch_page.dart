@@ -39,28 +39,125 @@ class _LaunchListState extends State<LaunchListState> {
         child: FutureBuilder<List<Launch>>(
           future: fetchAllLaunches(),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
+            if (snapshot.hasData) {
+              final launches = snapshot.data!;
+              return ListView.builder(
+                  itemCount: launches.length,
+                  itemBuilder: (context, index) {
+                    Launch launch = launches[index];
+                    return LaunchCard(launch: launch);
+                  });
             } else if (snapshot.hasError) {
               return const Text('Failed to load launches');
-            } else if (snapshot.hasData) {
-              final launches = snapshot.data!;
-              return ListView.separated(
-                itemCount: launches.length,
-                separatorBuilder: (context, index) => const Divider(),
-                itemBuilder: (context, index) {
-                  final launch = launches[index];
-                  return ListTile(
-                      title: Text(launch.missionName as String),
-                      subtitle: Text(launch.description as String));
-                },
-              );
             } else {
-              return const Text('No launches available');
+              // return const Text('No launches available');
+              return const CircularProgressIndicator();
             }
           },
         ),
       ),
     );
+  }
+}
+
+class LaunchCard extends StatefulWidget {
+  const LaunchCard({
+    super.key,
+    required this.launch,
+  });
+
+  final Launch launch;
+
+  @override
+  State<LaunchCard> createState() => LaunchCardState();
+}
+
+class LaunchCardState extends State<LaunchCard> {
+  bool showFull = false;
+
+  void _toggleFull() {
+    setState(() {
+      showFull = !showFull;
+      // print("$showFull  ${widget.launch.missionName}");
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        elevation: 5,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.launch.missionName ?? '',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(widget.launch.description ?? ''),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18.0),
+                        ),
+                      ),
+                      backgroundColor: const WidgetStatePropertyAll<Color>(
+                          Color(0xFFdcdcdc)),
+                    ),
+                    onPressed: () {
+                      _toggleFull();
+                    },
+                    child: showFull
+                        ? const Row(mainAxisSize: MainAxisSize.min, children: [
+                            Text(
+                              "Less",
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_upward,
+                              color: Colors.blue,
+                            )
+                          ])
+                        : const Row(mainAxisSize: MainAxisSize.min, children: [
+                            Text("More",
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold,
+                                )),
+                            Icon(
+                              Icons.arrow_downward,
+                              color: Colors.blue,
+                            )
+                          ]),
+                  ),
+                ),
+                // Align(
+                //   alignment: Alignment.center,
+                //   child: ListView.builder(
+                //     itemCount: widget.launch.payloadIds?.length,
+                //     itemBuilder: (context, index) {
+                //       String payloadId = widget.launch.payloadIds![index];
+                //       return Chip(
+                //         label: Text(payloadId),
+                //       );
+                //     },
+                //   ),
+                // ),
+              ]),
+        ));
   }
 }
