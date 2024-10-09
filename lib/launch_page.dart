@@ -28,6 +28,13 @@ class _LaunchListState extends State<LaunchListState> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "Space Missions",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF016B6D),
+      ),
       body: Center(
         child: FutureBuilder<List<Launch>>(
           future: fetchAllLaunches(),
@@ -44,12 +51,8 @@ class _LaunchListState extends State<LaunchListState> {
                 itemBuilder: (context, index) {
                   final launch = launches[index];
                   return ListTile(
-                    leading: CircleAvatar(
-                      child: Image.network('https://via.placeholder.com/150'),
-                    ),
-                    title: Text(launch.missionName as String),
-                    subtitle: Text(launch.description as String),
-                  );
+                      title: Text(launch.missionName as String),
+                      subtitle: Text(launch.description as String));
                 },
               );
             } else {
