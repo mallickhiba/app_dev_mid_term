@@ -29,35 +29,37 @@ class _LaunchListState extends State<LaunchListState> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Space Missions",
-          style: TextStyle(color: Colors.white),
+        appBar: AppBar(
+          title: const Text(
+            "Space Missions",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: const Color(0xFF016B6D),
         ),
-        backgroundColor: const Color(0xFF016B6D),
-      ),
-      body: Center(
-        child: FutureBuilder<List<Launch>>(
-          future: fetchAllLaunches(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final launches = snapshot.data!;
-              return ListView.builder(
-                  itemCount: launches.length,
-                  itemBuilder: (context, index) {
-                    Launch launch = launches[index];
-                    return LaunchCard(launch: launch);
-                  });
-            } else if (snapshot.hasError) {
-              return const Text('Failed to load launches');
-            } else {
-              // return const Text('No launches available');
-              return const CircularProgressIndicator();
-            }
-          },
-        ),
-      ),
-    );
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: FutureBuilder<List<Launch>>(
+              future: fetchAllLaunches(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final launches = snapshot.data!;
+                  return ListView.builder(
+                      itemCount: launches.length,
+                      itemBuilder: (context, index) {
+                        Launch launch = launches[index];
+                        return LaunchCard(launch: launch);
+                      });
+                } else if (snapshot.hasError) {
+                  return const Text('Failed to load launches');
+                } else {
+                  // return const Text('No launches available');
+                  return const CircularProgressIndicator();
+                }
+              },
+            ),
+          ),
+        ));
   }
 }
 
@@ -92,8 +94,8 @@ class LaunchCardState extends State<LaunchCard> {
                 Text(
                   widget.launch.missionName ?? '',
                   style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
@@ -105,19 +107,37 @@ class LaunchCardState extends State<LaunchCard> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: ElevatedButton(
+                    style: const ButtonStyle(
+                      backgroundColor:
+                          WidgetStatePropertyAll<Color>(Color(0xFFdcdcdc)),
+                    ),
                     onPressed: () {
                       setState(() {
                         showMore = !showMore;
                       });
                     },
-                    child: Text(showMore ? "Less" : "More"),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          showMore ? "Less" : "More",
+                          style: const TextStyle(
+                              color: Colors.blue, fontWeight: FontWeight.bold),
+                        ),
+                        Icon(
+                          showMore ? Icons.arrow_upward : Icons.arrow_downward,
+                          color: Colors.blue,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 Wrap(
                   children: widget.launch.payloadIds!
                       .map(
                         (payload) => Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 5),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 5),
                             child: Chip(
                                 label: Text(payload,
                                     style:
