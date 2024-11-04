@@ -1,59 +1,11 @@
-// ignore_for_file: prefer_collection_literals, unnecessary_this, unnecessary_new
-
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
+import 'package:app_dev_mid_term/launch_model.dart';
 
-// Launch Model
-class Launch {
-  String? missionName;
-  String? missionId;
-  List<String>? manufacturers;
-  List<String>? payloadIds;
-  String? wikipedia;
-  String? website;
-  String? twitter;
-  String? description;
-
-  Launch({
-    this.missionName,
-    this.missionId,
-    this.manufacturers,
-    this.payloadIds,
-    this.wikipedia,
-    this.website,
-    this.twitter,
-    this.description,
-  });
-
-  Launch.fromJson(Map<String, dynamic> json) {
-    missionName = json['mission_name'];
-    missionId = json['mission_id'];
-    manufacturers = json['manufacturers']?.cast<String>();
-    payloadIds = json['payload_ids']?.cast<String>();
-    wikipedia = json['wikipedia'];
-    website = json['website'];
-    twitter = json['twitter'];
-    description = json['description'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
-    data['mission_name'] = this.missionName;
-    data['mission_id'] = this.missionId;
-    data['manufacturers'] = this.manufacturers;
-    data['payload_ids'] = this.payloadIds;
-    data['wikipedia'] = this.wikipedia;
-    data['website'] = this.website;
-    data['twitter'] = this.twitter;
-    data['description'] = this.description;
-    return data;
-  }
-}
-
-// BLoC Events and States
 abstract class LaunchEvent {}
 
 class FetchLaunches extends LaunchEvent {}
@@ -74,13 +26,12 @@ class LaunchError extends LaunchState {
   LaunchError(this.error);
 }
 
-// Launch BLoC
 class LaunchBloc extends Bloc<LaunchEvent, LaunchState> {
   LaunchBloc() : super(LaunchInitial()) {
     on<FetchLaunches>(_onFetchLaunches);
   }
 
-  FutureOr<void> _onFetchLaunches(
+  Future<void> _onFetchLaunches(
       FetchLaunches event, Emitter<LaunchState> emit) async {
     emit(LaunchLoading());
     try {
@@ -103,25 +54,21 @@ class LaunchBloc extends Bloc<LaunchEvent, LaunchState> {
 
 // Launch Page
 class LaunchPage extends StatelessWidget {
+  const LaunchPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Space Missions',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        appBarTheme: const AppBarTheme(),
-        useMaterial3: false,
-      ),
-      home: BlocProvider(
-        create: (context) => LaunchBloc()..add(FetchLaunches()),
-        child: LaunchScreen(),
-      ),
+    return BlocProvider(
+      create: (context) => LaunchBloc()..add(FetchLaunches()),
+      child: const LaunchScreen(),
     );
   }
 }
 
 // Launch Screen
 class LaunchScreen extends StatelessWidget {
+  const LaunchScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,15 +85,12 @@ class LaunchScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           } else if (state is LaunchLoaded) {
             return Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(10.0),
               child: ListView.builder(
                 itemCount: state.launches.length,
                 itemBuilder: (context, index) {
                   final launch = state.launches[index];
-                  return ListTile(
-                    title: Text(launch.missionName.toString()),
-                    subtitle: Text(launch.description.toString()),
-                  );
+                  return LaunchCard(launch: launch);
                 },
               ),
             );
@@ -155,6 +99,102 @@ class LaunchScreen extends StatelessWidget {
           }
           return const Center(child: Text("No data available"));
         },
+      ),
+    );
+  }
+}
+
+// Launch Card
+class LaunchCard extends StatefulWidget {
+  const LaunchCard({
+    super.key,
+    required this.launch,
+  });
+
+  final Launch launch;
+
+  @override
+  State<LaunchCard> createState() => LaunchCardState();
+}
+
+class LaunchCardState extends State<LaunchCard> {
+  bool showMore = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      elevation: 5,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.launch.missionName ?? '',
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              widget.launch.description ?? '',
+              textAlign: TextAlign.center,
+              maxLines: showMore ? 100 : 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                style: const ButtonStyle(
+                  backgroundColor:
+                      WidgetStatePropertyAll<Color>(Color(0xFFdcdcdc)),
+                ),
+                onPressed: () {
+                  setState(() {
+                    showMore = !showMore;
+                  });
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      showMore ? "Less" : "More",
+                      style: const TextStyle(
+                          color: Colors.blue, fontWeight: FontWeight.bold),
+                    ),
+                    Icon(
+                      showMore ? Icons.arrow_upward : Icons.arrow_downward,
+                      color: Colors.blue,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Wrap(
+              children: widget.launch.payloadIds!
+                  .map(
+                    (payload) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 5),
+                      child: Chip(
+                        label: Text(payload,
+                            style: const TextStyle(color: Colors.black)),
+                        backgroundColor: Colors.primaries[
+                            Random().nextInt(Colors.primaries.length)],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(150),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ),
       ),
     );
   }
